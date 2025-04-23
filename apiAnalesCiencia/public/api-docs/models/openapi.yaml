@@ -27,6 +27,8 @@ tags:
     description: Entity management
   - name: '🪠 Persons'
     description: Person management
+  - name: '🔥 Associations'
+    description: Association management
 
 paths:
   '/access_token':
@@ -1048,6 +1050,261 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/Response_Options'
+
+## Associations
+  '/associations':
+    get:
+      tags:
+        - '🔥 Associations'
+      summary: Retrieves the collection of Association resources.
+      description: Returns all associations from the system that the user has access to.
+      operationId: readAssociations
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      parameters:
+        - $ref: '#/components/parameters/elementTextParam'
+        - $ref: '#/components/parameters/orderParam'
+        - $ref: '#/components/parameters/orderingParam'
+      responses:
+        '200':
+          description: Object containing an array of Associations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  associations:
+                    description: Associations array
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Association'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    post:
+      tags:
+        - '🔥 Associations'
+      summary: Creates a Association resource.
+      description: Creates a new association
+      operationId: createAssociation
+      security:
+        - MiWApiSecurity: [ writer ]
+      requestBody:
+        $ref: '#/components/requestBodies/ElementRequestBody'
+      responses:
+        '201':
+          description: '`Created`: association created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '403':
+          $ref: '#/components/responses/Response_403'
+        '422':
+          $ref: '#/components/responses/Response_422'
+    options:
+      tags:
+        - '🔥 Associations'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: cOptionsAssociation
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/associations/{associationId}':
+    parameters:
+      - $ref: '#/components/parameters/associationId'
+    get:
+      tags:
+        - '🔥 Associations'
+      summary: Retrieves an Association resource based on a single ID.
+      description: Returns the association identified by `associationId`.
+      operationId: readAssociation
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      responses:
+        '200':
+          description: Association
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    put:
+      tags:
+        - '🔥 Associations'
+      summary: Updates the Association resource.
+      description: Updates the association identified by `associationId`.
+      operationId: updateAssociation
+      security:
+        - MiWApiSecurity: [ writer ]
+      requestBody:
+        $ref: '#/components/requestBodies/ElementRequestBody'
+      parameters:
+        - $ref: '#/components/parameters/ifMatchParam'
+      responses:
+        '209':
+          description: '`Content Returned`: association previously existed and is now updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+        '428':
+          $ref: '#/components/responses/Response_428'
+    delete:
+      tags:
+        - '🔥 Associations'
+      summary: Removes the Association resource.
+      description: Deletes the association identified by `associationId`.
+      operationId: deleteAssociation
+      security:
+        - MiWApiSecurity: [ writer ]
+      responses:
+        '204':
+          description: Association deleted &lt;Response body is empty&gt;
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    options:
+      tags:
+        - '🔥 Associations'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsAssociation
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/associations/associationname/{associationname}':
+    get:
+      tags:
+        - '🔥 Associations'
+      summary: Determines if associationname exists
+      description: Returns status code 204 if `associationname` exists.
+      operationId: existsAssociation
+      parameters:
+        - $ref: '#/components/parameters/associationName'
+      responses:
+        '204':
+          description: Associationname exists &lt;Response body is empty&gt;
+        '404':
+          $ref: '#/components/responses/Response_404'
+
+  '/associations/{associationId}/{elementType}':
+    parameters:
+      - $ref: '#/components/parameters/associationId'
+      - $ref: '#/components/parameters/elementassociationRelParam'
+    get:
+      tags:
+        - '🔥 Associations'
+      summary: List of elements related to the association
+      description: Returns the elements related to the association `associationId`
+      operationId: readAssociationElements
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      responses:
+        '200':
+          description: Array of Elements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entities:
+                    description: Element array
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Element'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        # '401':
+        #   $ref: '#/components/responses/Response_401'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    options:
+      tags:
+        - '🔥 Associations'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsAssociationElements
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/associations/{associationId}/{elementType}/{operationType}/{elementId}':
+    parameters:
+      - $ref: '#/components/parameters/associationId'
+      - $ref: '#/components/parameters/elementAssociationRelParam'
+      - $ref: '#/components/parameters/operationParam'
+      - $ref: '#/components/parameters/elementId'
+    put:
+      tags:
+        - '🔥 Associations'
+      summary: Sets or remove the relationship association-element
+      description: Establishes/Removes the relationship of the association with the element
+      operationId: api_associations_add_rem_element
+      security:
+        - MiWApiSecurity: [ writer ]
+      responses:
+        '209':
+          description: '`Content Returned`: association is now updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '403':
+          $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+        '406':
+          $ref: '#/components/responses/Response_406'
+    options:
+      tags:
+        - '🔥 Associations'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsAssociationsOpEntity
+      responses:
+        '204':
+          $ref: '#/components/responses/Response_Options'
+
 ## Components
 components:
   schemas:
@@ -1218,6 +1475,26 @@ components:
             wikiUrl: 'https://wiki02.example.com/Entity02'
             products: [ 1, 7 ]
             persons: [ 3, 17 ]
+##Association
+    Association:
+      allOf:
+        - $ref: '#/components/schemas/Element'
+        - type: object
+          properties:
+            entities:
+              description: Array of Entity Ids
+              type: array
+              items:
+                type: integer
+      examples:
+        - association:
+            id: 7
+            name: Association07
+            birthDate: '2020-01-01'
+            deathDate: '2250-12-25'
+            imageUrl: 'https://image07.example.com/Association07.png'
+            wikiUrl: 'https://wiki07.example.com/Association07'
+            entities: [ 2 ]
     Message:
       type: object
       description: HTTP response message
@@ -1476,6 +1753,18 @@ components:
         format: int64
         minimum: 1
         pattern: ^\d+$
+### Association
+    associationId:
+      name: associationId
+      in: path
+      description: ID of association
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+
     username:
       name: username
       in: path

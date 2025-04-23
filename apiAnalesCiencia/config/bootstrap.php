@@ -25,6 +25,7 @@ try {
 (require __DIR__ . '/routesProducts.php')($app);
 (require __DIR__ . '/routesPersons.php')($app);
 (require __DIR__ . '/routesEntities.php')($app);
+(require __DIR__ . '/routesAssociations.php')($app);
 
 // Register middleware
 (require __DIR__ . '/middleware.php')($app);
