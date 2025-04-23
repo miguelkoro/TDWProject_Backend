@@ -1,0 +1,1107 @@
+openapi: 3.1.1
+
+info:
+  title: '🏛️ TDW - ACiencia REST api'
+  description: '[UPM] TDW REST api ACiencia'
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+  version: 1.8.0
+  contact:
+    name: Máster Universitario en Ingeniería Web
+    url: 'https://miw.etsisi.upm.es/'
+    email: miw.etsisi@upm.es
+
+servers:
+  - url: '/api/v1'
+    description: TDW Production server (uses live data)
+
+tags:
+  - name: '🔐 Login'
+    description: User login
+  - name: '👥 Users'
+    description: User management
+  - name: '💡 Products'
+    description: Product management
+
+paths:
+  '/access_token':
+    servers:
+      - 'url': '/'
+    options:
+      tags:
+        - '🔐 Login'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: api_options_login
+      responses:
+        '204':
+          description: '`Allow` header _&lt;Response body is empty&gt;_'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+    post:
+      tags:
+        - '🔐 Login'
+      summary: Returns api token
+      description: Returns api authorization token (JWT).
+      operationId: api_post_login
+      requestBody:
+        $ref: '#/components/requestBodies/LoginRequestBody'
+      responses:
+        '200':
+          description: _User access token_
+          headers:
+            Authorization:
+              description: Authorization header with access token
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token_type:
+                    type: string
+                    default: Bearer
+                  expires_in:
+                    type: integer
+                    default: 14400
+                    description: Max lifetime in seconds
+                  access_token:
+                    description: JSON web token
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    token_type: Bearer
+                    expires_in: 14400
+                    access_token: <JSON web token>
+          links:
+            AllEndPoints:
+              operationId: '*'
+              parameters:
+                token: $response.body#/token
+              description: 'The `access_token` value returned in the response must be appended to the `Authorization: Bearer ` header in all operations.'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    default: invalid_grant
+                  error_description:
+                    type: string
+              example:
+                { "error": "invalid_grant", "error_description": "The user’s password is invalid or expired or user is invalid" }
+  '/users':
+    get:
+      tags:
+        - '👥 Users'
+      summary: Retrieves the collection of User resources.
+      description: Returns all users from the system that the user has access to.
+      operationId: api_users_cget
+      security:
+        - MiWApiSecurity: [ reader, writer ]
+      responses:
+        '200':
+          description: Object containing an array of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    description: Users array
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    post:
+      tags:
+        - '👥 Users'
+      summary: Creates a User resource.
+      description: Creates a new INACTIVE user
+      operationId: api_users_post
+      requestBody:
+        $ref: '#/components/requestBodies/UserRequestBody'
+      responses:
+        '201':
+          description: '`CREATED`: (inactive) user created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          links:
+            GetUserByUserId:  # GET /users/{userId}
+              operationId: api_users_get
+              parameters:
+                userId: '$response.body#/id'
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `GET /users/{userId}`.
+            PutUserByUserId:  # PUT /users/{userId}
+              operationId: api_users_put
+              parameters:
+                userId: '$response.body#/id'
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `PUT /users/{userId}`.
+            DeleteUserByUserId:  # DELETE /users/{userId}
+              operationId: api_users_delete
+              parameters:
+                userId: '$response.body#/id'
+              description: >
+                The `id` value returned in the response can be used as
+                the `userId` parameter in `DELETE /users/{userId}`.
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '422':
+          $ref: '#/components/responses/Response_422'
+    options:
+      tags:
+        - '👥 Users'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: api_users_coptions
+      responses:
+        '204':
+          description: '`Allow` header _&lt;Response body is empty&gt;_'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/users/{userId}':
+    parameters:
+      - $ref: '#/components/parameters/userId'
+    get:
+      tags:
+        - '👥 Users'
+      summary: Retrieves a User resource based on a single ID.
+      description: Returns the user identified by `userId`.
+      operationId: api_users_get
+      security:
+        - MiWApiSecurity: [ reader, writer ]
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    put:
+      tags:
+        - '👥 Users'
+      summary: Updates the User resource.
+      description: |
+        Updates the user identified by `userId`.
+        - a `reader` user can only modify their own properties
+        - a `inactive` or `reader` user cannot modify his role
+      operationId: api_users_put
+      parameters:
+        - $ref: '#/components/parameters/ifMatchParam'
+      security:
+        - MiWApiSecurity: [ reader, writer ]
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUserRequestBody'
+      responses:
+        '209':
+          description: '`Content Returned`: user previously existed and is now updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+        '428':
+          $ref: '#/components/responses/Response_428'
+    delete:
+      tags:
+        - '👥 Users'
+      summary: Removes the User resource.
+      description: Deletes the user identified by `userId`.
+      operationId: api_users_delete
+      security:
+        - MiWApiSecurity: [ writer ]
+      responses:
+        '204':
+          description: User deleted &lt;Response body is empty&gt;
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    options:
+      tags:
+        - '👥 Users'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: api_users_options_id
+      responses:
+        '204':
+          description: '`Allow` header _&lt;Response body is empty&gt;_'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/users/username/{username}':
+    get:
+      tags:
+        - '👥 Users'
+      summary: Determines if username exists
+      description: Returns status code 204 if `username` exists.
+      operationId: api_get_user_name
+      parameters:
+        - $ref: '#/components/parameters/username'
+      responses:
+        '204':
+          description: Username exists &lt;Response body is empty&gt;
+        '404':
+          $ref: '#/components/responses/Response_404'
+
+  '/products':
+    get:
+      tags:
+        - '💡 Products'
+      summary: Retrieves the collection of Product resources.
+      description: Returns all products from the system that the user has access to.
+      operationId: readProducts
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      parameters:
+        - $ref: '#/components/parameters/elementTextParam'
+        - $ref: '#/components/parameters/orderParam'
+        - $ref: '#/components/parameters/orderingParam'
+      responses:
+        '200':
+          description: Object containing an array of Products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    description: Products array
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    post:
+      tags:
+        - '💡 Products'
+      summary: Creates a Product resource.
+      description: Creates a new product
+      operationId: createProduct
+      security:
+        - MiWApiSecurity: [ writer ]
+      requestBody:
+        $ref: '#/components/requestBodies/ElementRequestBody'
+      responses:
+        '201':
+          description: '`Created`: product created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '403':
+          $ref: '#/components/responses/Response_403'
+        '422':
+          $ref: '#/components/responses/Response_422'
+    options:
+      tags:
+        - '💡 Products'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: cOptionsProduct
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/products/{productId}':
+    parameters:
+      - $ref: '#/components/parameters/productId'
+    get:
+      tags:
+        - '💡 Products'
+      summary: Retrieves a Product resource based on a single ID.
+      description: Returns the product identified by `productId`.
+      operationId: readProduct
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    put:
+      tags:
+        - '💡 Products'
+      summary: Updates the Product resource.
+      description: Updates the product identified by `productId`.
+      operationId: updateProduct
+      security:
+        - MiWApiSecurity: [ writer ]
+      requestBody:
+        $ref: '#/components/requestBodies/ElementRequestBody'
+      parameters:
+        - $ref: '#/components/parameters/ifMatchParam'
+      responses:
+        '209':
+          description: '`Content Returned`: product previously existed and is now updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+        '428':
+          $ref: '#/components/responses/Response_428'
+    delete:
+      tags:
+        - '💡 Products'
+      summary: Removes the Product resource.
+      description: Deletes the product identified by `productId`.
+      operationId: deleteProduct
+      security:
+        - MiWApiSecurity: [ writer ]
+      responses:
+        '204':
+          description: Product deleted &lt;Response body is empty&gt;
+        '401':
+          $ref: '#/components/responses/Response_401'
+        # '403':
+        #   $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    options:
+      tags:
+        - '💡 Products'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsProduct
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/products/productname/{productname}':
+    get:
+      tags:
+        - '💡 Products'
+      summary: Determines if productname exists
+      description: Returns status code 204 if `productname` exists.
+      operationId: existsProduct
+      parameters:
+        - $ref: '#/components/parameters/productName'
+      responses:
+        '204':
+          description: Productname exists &lt;Response body is empty&gt;
+        '404':
+          $ref: '#/components/responses/Response_404'
+
+  '/products/{productId}/{elementType}':
+    parameters:
+      - $ref: '#/components/parameters/productId'
+      - $ref: '#/components/parameters/elementProductRelParam'
+    get:
+      tags:
+        - '💡 Products'
+      summary: List of elements related to the product
+      description: Returns the elements related to the product `productId`
+      operationId: readProductElements
+      # security:
+      #   - MiWApiSecurity: [ reader ]
+      responses:
+        '200':
+          description: Array of Elements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entities:
+                    description: Element array
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Element'
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        # '401':
+        #   $ref: '#/components/responses/Response_401'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    options:
+      tags:
+        - '💡 Products'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsProductElements
+      responses:
+        '204':
+          description: '`Allow` header &lt;Response body is empty&gt;'
+          headers:
+            Allow:
+              $ref: '#/components/headers/Allow'
+
+  '/products/{productId}/{elementType}/{operationType}/{elementId}':
+    parameters:
+      - $ref: '#/components/parameters/productId'
+      - $ref: '#/components/parameters/elementProductRelParam'
+      - $ref: '#/components/parameters/operationParam'
+      - $ref: '#/components/parameters/elementId'
+    put:
+      tags:
+        - '💡 Products'
+      summary: Sets or remove the relationship product-element
+      description: Establishes/Removes the relationship of the product with the element
+      operationId: api_products_add_rem_element
+      security:
+        - MiWApiSecurity: [ writer ]
+      responses:
+        '209':
+          description: '`Content Returned`: product is now updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Response_401'
+        '403':
+          $ref: '#/components/responses/Response_403'
+        '404':
+          $ref: '#/components/responses/Response_404'
+        '406':
+          $ref: '#/components/responses/Response_406'
+    options:
+      tags:
+        - '💡 Products'
+      summary: Provides the list of HTTP supported methods.
+      description: Return a `Allow` header with a comma separated list of HTTP supported methods.
+      operationId: optionsProductsOpEntity
+      responses:
+        '204':
+          $ref: '#/components/responses/Response_Options'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          description: User Id
+          type: integer
+          format: int64
+          readOnly: true
+        username:
+          description: User name
+          type: string
+        email:
+          description: User email
+          type: string
+          format: email
+        role:
+          description: User role
+          type: string
+          # default: INACTIVE
+          enum:
+            - INACTIVE
+            - READER
+            - WRITER
+        # _links:
+        #   description: link relations
+        #   type: object
+        #   properties:
+        #     parent:
+        #       type: object
+        #       properties:
+        #         href:
+        #           type: string
+        #           format: url
+        #     self:
+        #       type: object
+        #       properties:
+        #         href:
+        #           type: string
+        #           format: url
+      examples:
+        - user:
+            id: 1508
+            username: user1508
+            email: miw.etsisi@upm.es
+            role: INACTIVE
+            # _links:
+            #   parent:
+            #     href: /api/v1/users
+            #   self:
+            #     href: /api/v1/users/1508
+      description: ''
+      x-examples:
+        example-1:
+          user:
+            id: 1508
+            username: user1508
+            email: miw.etsisi@upm.es
+            role: INACTIVE
+            # _links:
+            #   parent:
+            #     href: /api/v1/users
+            #   self:
+            #     href: /api/v1/users/1508
+    Element:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Element Id
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        birthDate:
+          description: An RFC3339 formatted date string ("2025-01-01")
+          type: string
+          format: date
+        deathDate:
+          description: An RFC3339 formatted date string ("2025-01-01")
+          type: string
+          format: date
+        imageUrl:
+          type: string
+          maxLength: 2047
+          format: url
+        wikiUrl:
+          type: string
+          maxLength: 2047
+          format: url
+      required:
+        - name
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/Element'
+        - type: object
+          properties:
+            persons:
+              description: Array of Person Ids
+              type: array
+              items:
+                type: integer
+            entities:
+              description: Array of Entity Ids
+              type: array
+              items:
+                type: integer
+      examples:
+        - product:
+            id: 7
+            name: Product07
+            birthDate: '2020-01-01'
+            deathDate: '2250-12-25'
+            imageUrl: 'https://image07.example.com/Product07.png'
+            wikiUrl: 'https://wiki07.example.com/Product07'
+            persons: [ 3, 17 ]
+            entities: [ 2 ]
+    Person:
+      allOf:
+        - $ref: '#/components/schemas/Element'
+        - type: object
+          properties:
+            products:
+              description: Array of Product Ids
+              type: array
+              items:
+                type: integer
+            entities:
+              description: Array of Entity Ids
+              type: array
+              items:
+                type: integer
+      examples:
+        - person:
+            id: 17
+            name: Person17
+            birthDate: '2017-07-17'
+            deathDate: '2701-01-07'
+            imageUrl: 'https://image17.example.com/Person17.png'
+            wikiUrl: 'https://wiki17.example.com/Person17'
+            products: [ 1, 7 ]
+            entities: [ 2023 ]
+    Entity:
+      allOf:
+        - $ref: '#/components/schemas/Element'
+        - type: object
+          properties:
+            products:
+              description: Array of Product Ids
+              type: array
+              items:
+                type: integer
+            persons:
+              description: Array of Person Ids
+              type: array
+              items:
+                type: integer
+      examples:
+        - entity:
+            id: 2
+            name: Entity02
+            birthDate: '1936-07-18'
+            deathDate: '1939-04-01'
+            imageUrl: 'https://image02.example.com/Entity02.png'
+            wikiUrl: 'https://wiki02.example.com/Entity02'
+            products: [ 1, 7 ]
+            persons: [ 3, 17 ]
+    Message:
+      type: object
+      description: HTTP response message
+      properties:
+        code:
+          description: Response code
+          type: integer
+          format: int64
+        message:
+          description: Response message
+          type: string
+
+  responses:
+    Response_Options:
+      description: '`ALLOW` header &lt;Response body is empty&gt;'
+      headers:
+        Allow:
+          $ref: '#/components/headers/Allow'
+    Response_400:
+      description: '`BAD REQUEST`: User name or e-mail already exists, or role does not exist'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-400:
+              $ref: '#/components/examples/response-400'
+    Response_401:
+      description: '`UNAUTHORIZED`: invalid Authorization header'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-401:
+              $ref: '#/components/examples/response-401'
+    Response_403:
+      description: '`FORBIDDEN`: You don''t have permission to access'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-403:
+              $ref: '#/components/examples/response-403'
+    Response_404:
+      description: '`NOT FOUND`: resource not found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-404:
+              $ref: '#/components/examples/response-404'
+    Response_406:
+      description: '`NOT ACCEPTABLE`: Requested target resource not found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-406:
+              $ref: '#/components/examples/response-406'
+    Response_428:
+      description: '`PRECONDITION REQUIRED`: This request is required to be conditional; try using "If-Match".'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-428:
+              $ref: '#/components/examples/response-428'
+    Response_422:
+      description: '`UNPROCESSABLE ENTITY`: Username, e-mail or password is left out'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          examples:
+            response-422:
+              $ref: '#/components/examples/response-422'
+
+  requestBodies:
+    UserRequestBody:
+      description: '`User` data'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                description: User name
+                type: string
+              email:
+                description: User email
+                type: string
+                format: email
+              password:
+                description: User password
+                type: string
+                format: password
+            required: [ 'username', 'email', 'password' ]
+            examples:
+                - username: username
+                  email: User_email@example.com
+                  password: User_password
+    UpdateUserRequestBody:
+      description: User data that you want to modify
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                description: new User name
+                type: string
+              email:
+                description: new User email
+                type: string
+                format: email
+              password:
+                description: new User password
+                type: string
+                format: password
+              role:
+                description: new User role
+                type: string
+                enum:
+                  - INACTIVE
+                  - READER
+                  - WRITER
+            examples:
+              - username: miw.etsisi
+                email: miw.etsisi@upm.es
+                password: MiW_User_password
+                role: READER
+    LoginRequestBody:
+      description: Registered **username** and **password**
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              username:
+                description: User name
+                type: string
+              password:
+                description: User password
+                type: string
+                format: password
+              scope:
+                description: Requested scopes
+                type: string
+                # default: reader
+                enum:
+                  - reader
+                  - reader+writer
+            required: [ 'username', 'password' ]
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                description: User name
+                type: string
+              password:
+                description: User password
+                type: string
+                format: password
+              scope:
+                description: Requested scopes
+                type: string
+                default: reader
+                enum:
+                  - reader
+                  - reader+writer
+            required: [ 'username', 'password']
+    ElementRequestBody:
+      description: '`Element` data'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                maxLength: 80
+              birthDate:
+                description: An RFC3339 formatted date string ("2025-01-01")
+                type: string
+                format: date
+              deathDate:
+                description: An RFC3339 formatted date string ("2025-01-01")
+                type: string
+                format: date
+              imageUrl:
+                type: string
+                maxLength: 2047
+                format: url
+              wikiUrl:
+                type: string
+                maxLength: 2047
+                format: url
+            required: [ 'name' ]
+
+  parameters:
+    userId:
+      name: userId
+      in: path
+      description: ID of user
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+    elementId:
+      name: elementId
+      in: path
+      description: Generic element ID
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+    productId:
+      name: productId
+      in: path
+      description: ID of product
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+    personId:
+      name: personId
+      in: path
+      description: ID of person
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+    entityId:
+      name: entityId
+      in: path
+      description: ID of entity
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        pattern: ^\d+$
+    username:
+      name: username
+      in: path
+      description: User name
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    elementTextParam:
+      name: name
+      in: query
+      description: Elements containing the text
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-<>]+$'
+    productName:
+      name: productname
+      in: path
+      description: Product name
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    orderParam:
+      name: order
+      in: query
+      description: '`id` | `name`'
+      required: false
+      allowEmptyValue: false
+      schema:
+        type: string
+        enum:
+          - id
+          - name
+    orderingParam:
+      name: ordering
+      in: query
+      description: '`ASC` | `DESC`'
+      required: false
+      allowEmptyValue: false
+      schema:
+        type: string
+        enum:
+          - ASC
+          - DESC
+    ifMatchParam:
+      name: If-Match
+      in: header
+      description: "ETag value of the resource you are trying to update"
+      required: true
+      schema:
+        type: string
+        pattern: "[0-9a-f]*"
+    operationParam:
+      name: operationType
+      in: path
+      description: |-
+        Set the operation to perform:
+        <li><b>add</b>: add the relationship
+        <li><b>rem</b>: remove the relationship
+
+      required: true
+      schema:
+        type: string
+        enum:
+          - add
+          - rem
+    elementProductRelParam:
+      name: elementType
+      in: path
+      description: |-
+        Sets the type of item related to the Product:
+        <li><b>entities</b>: Entities type element
+        <li><b>persons</b>: Persons type element
+
+      required: true
+      schema:
+        type: string
+        enum:
+          - entities
+          - persons
+
+  headers:
+    ETag:
+      description: Entity Tag (unique identifier provided for cache validation)
+      schema:
+        type: string
+        pattern: "[0-9a-f]*"
+    Location:
+      description: '`URI` of the new resource'
+      schema:
+        type: string
+        format: url
+    Allow:
+      description: List of HTTP supported methods
+      schema:
+        type: string
+
+  examples:
+    response-400:
+      value:
+        code: 400
+        message: 'BAD REQUEST: name or e-mail already exists'
+    response-401:
+      value:
+        code: 401
+        message: 'UNAUTHORIZED: invalid Authorization header'
+    response-403:
+      value:
+        code: 403
+        message: "FORBIDDEN: You don't have permission to access"
+    response-404:
+      value:
+        code: 404
+        message: "NOT FOUND: Resource not found (or you don't have permission to access)"
+    response-406:
+      value:
+        code: 406
+        message: 'NOT ACCEPTABLE: Requested resource not found'
+    response-428:
+      value:
+        code: 428
+        message: 'PRECONDITION REQUIRED: This request is required to be conditional; try using "If-Match".'
+    response-422:
+      value:
+        code: 422
+        message: 'UNPROCESSABLE ENTITY: name, e-mail or password is left out'
+
+  securitySchemes:
+    MiWApiSecurity:
+      type: oauth2
+      description: 'This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)'
+      bearerFormat: JWT
+      flows:
+        password:
+          tokenUrl: /access_token
+          scopes:
+            reader: 'Permissions: (read, update) [ User, Person, Entity, Product ]'
+            writer: 'can also: (create, update, delete) [ User, Person, Entity, Product ]'
