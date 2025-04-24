@@ -1465,6 +1465,12 @@ components:
               type: array
               items:
                 type: integer
+          # añadida asociaciones a las entidades
+            associations:
+              description: Array of Association Ids
+              type: array
+              items:
+                type: integer
       examples:
         - entity:
             id: 2
@@ -1475,6 +1481,7 @@ components:
             wikiUrl: 'https://wiki02.example.com/Entity02'
             products: [ 1, 7 ]
             persons: [ 3, 17 ]
+            associations: [ 2, 7 ] #añadida asociaciones a las entidades
 ##Association
     Association:
       allOf:
@@ -1911,6 +1918,7 @@ components:
         Sets the type of item related to the Entity:
         <li><b>products</b>: Products type element
         <li><b>persons</b>: Persons type element
+        <li><b>associations</b>: Associations type element 
 
       required: true
       schema:
@@ -1918,6 +1926,7 @@ components:
         enum:
           - products
           - persons
+          - associations #añadido asociaciones a las entidades
     #
 
   headers:

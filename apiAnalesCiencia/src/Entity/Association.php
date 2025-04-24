@@ -90,15 +90,13 @@ class Association extends Element
      */
     public function addEntity(Entity $entity): void
     {
-        if ($this->containsEntity($entity)) {
-            return;
+        if (!$this->containsEntity($entity)) {
+            $this->entities->add($entity);
         }
-
-        $this->entities->add($entity);
     }
 
     /**
-     * Remove a person from the entity
+     * Remove a association from the entity
      *
      * @param Entity $entity
      *
@@ -162,15 +160,16 @@ class Association extends Element
     /**
      * @see \Stringable
      */
-    /*public function __toString(): string
+    public function __toString(): string
     {
         return sprintf(
-            '%s persons=%s, products=%s)]',
+            //'%s persons=%s, products=%s)]',
+            '%s entities=%s)]',
             parent::__toString(),
-            $this->getCodesStr($this->getPersons()),
-            $this->getCodesStr($this->getProducts())
+            $this->getCodesStr($this->getEntities()),
+            //$this->getCodesStr($this->getProducts())
         );
-    }*/
+    }
 
     /**
      * @see \JsonSerializable

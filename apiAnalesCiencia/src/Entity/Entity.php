@@ -59,6 +59,8 @@ class Entity extends Element
         $this->persons = new ArrayCollection();
         /* Initialize products collection */
         $this->products = new ArrayCollection();
+        /* Initialize associations collection */ //AÑADIDA ASSOCIACIONES
+        $this->associations = new ArrayCollection();
     }
 
     // Persons
@@ -163,16 +165,66 @@ class Entity extends Element
         return $result;
     }
 
+    // Associations
+    /**
+     * Obtains the associations in which the entity participates
+     *
+     * @return Collection<Association>
+     */
+    public function getAssociations(): Collection
+    {
+        return $this->associations;
+    }
+
+    /**
+     * Determines whether the entity participates in the creation of the product
+     *
+     * @param Association $association
+     * @return bool
+     */
+    public function containsAssociation(Association $association): bool
+    {
+        return $this->associations->contains($association);
+    }
+
+    /**
+     * Add a association to this entity
+     *
+     * @param Association $association
+     *
+     * @return void
+     */
+    public function addAssociation(Association $association): void
+    {
+        $this->associations->add($association);
+        $association->addEntity($this);
+    }
+
+    /**
+     * Delete a association from this entity
+     *
+     * @param Association $association
+     *
+     * @return bool TRUE if this collection contained the specified element, FALSE otherwise.
+     */
+    public function removeAssociation(Association $association): bool
+    {
+        $result = $this->associations->removeElement($association);
+        $association->removeEntity($this);
+        return $result;
+    }
+
     /**
      * @see \Stringable
      */
     public function __toString(): string
     {
         return sprintf(
-            '%s persons=%s, products=%s)]',
+            '%s persons=%s, products=%s, associations=%s)]',
             parent::__toString(),
             $this->getCodesStr($this->getPersons()),
-            $this->getCodesStr($this->getProducts())
+            $this->getCodesStr($this->getProducts()),
+            $this->getCodesStr($this->getAssociations())
         );
     }
 
@@ -189,6 +241,8 @@ class Entity extends Element
         $data['products'] = $numProducts !== 0 ? $this->getCodes($this->getProducts()) : null;
         $numPersons = count($this->getPersons());
         $data['persons'] = $numPersons !== 0 ? $this->getCodes($this->getPersons()) : null;
+        $numAssociations = count($this->getAssociations());
+        $data['associations'] = $numAssociations !== 0 ? $this->getCodes($this->getAssociations()) : null;
 
         return [strtolower($reflection->getShortName()) => $data];
     }
