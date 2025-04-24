@@ -976,7 +976,7 @@ paths:
         - '🪠 Persons'
       summary: List of elements related to the person
       description: Returns the elements related to the person `personId`
-      operationId: readEntityElements
+      operationId: readPersonElements
       # security:
       #   - MiWApiSecurity: [ reader ]
       responses:
