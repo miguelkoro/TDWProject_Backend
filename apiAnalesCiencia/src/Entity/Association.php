@@ -90,9 +90,8 @@ class Association extends Element
      */
     public function addEntity(Entity $entity): void
     {
-        if (!$this->containsEntity($entity)) {
-            $this->entities->add($entity);
-        }
+        $entity->addAssociation($this);
+        $this->entities->add($entity);
     }
 
     /**
@@ -104,7 +103,9 @@ class Association extends Element
      */
     public function removeEntity(Entity $entity): bool
     {
-        return $this->entities->removeElement($entity);
+        $result = $this->entities->removeElement($entity);
+        $entity->removeAssociation($this);
+        return $result;
     }
 
     // Products

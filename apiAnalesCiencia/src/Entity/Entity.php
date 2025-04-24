@@ -196,8 +196,11 @@ class Entity extends Element
      */
     public function addAssociation(Association $association): void
     {
+        if ($this->containsAssociation($association)) {
+            return;
+        }
+
         $this->associations->add($association);
-        $association->addEntity($this);
     }
 
     /**
