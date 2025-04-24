@@ -20,10 +20,16 @@ use ReflectionObject;
 class Person extends Element
 {
     #[ORM\ManyToMany(targetEntity: Entity::class, mappedBy: "persons")]
+    //#[ORM\JoinTable(name: "person_belongs_entity")]
+    //#[ORM\JoinColumn(name: "person_id", referencedColumnName: "id")]
+    //#[ORM\InverseJoinColumn(name: "entity_id", referencedColumnName: "id")]
     #[ORM\OrderBy([ "id" => "ASC" ])]
     protected Collection $entities;
 
     #[ORM\ManyToMany(targetEntity: Product::class, mappedBy: "persons")]
+    //#[ORM\JoinTable(name: "person_contributes_product")]
+    //#[ORM\JoinColumn(name: "person_id", referencedColumnName: "id")]
+    //#[ORM\InverseJoinColumn(name: "product_id", referencedColumnName: "id")]
     #[ORM\OrderBy([ "id" => "ASC" ])]
     protected Collection $products;
 
@@ -81,8 +87,11 @@ class Person extends Element
      */
     public function addEntity(Entity $entity): void
     {
-        $entity->addPerson($this);
-        $this->entities->add($entity);
+        //$entity->addPerson($this);
+        //$this->entities->add($entity);
+        if (!$this->containsEntity($entity)) {
+            $this->entities->add($entity);
+        }
     }
 
     /**
