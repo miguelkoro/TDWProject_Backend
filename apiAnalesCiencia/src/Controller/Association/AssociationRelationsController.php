@@ -48,7 +48,19 @@ final class AssociationRelationsController extends ElementRelationsBaseControlle
      */
     public function getEntities(Request $request, Response $response, array $args): Response
     {
-        // @TODO
+        // association -> entity
+        $associationId = $args[AssociationQueryController::getEntityIdName()] ?? 0;
+        if ($associationId <= 0 || $associationId > 2147483647) {   // 404
+            return $this->getElements($request, $response, null, EntityQueryController::getEntitiesTag(), []);
+        }
+        /** @var Association|null $association */
+        $association = $this->entityManager
+            ->getRepository(AssociationQueryController::getEntityClassName())
+            ->find($associationId);
+        
+        $entities = $association?->getEntities()->getValues() ?? [];
+
+        return $this->getElements($request, $response, $association, EntityQueryController::getEntitiesTag(), $entities);
     }
 
     /**
@@ -64,7 +76,12 @@ final class AssociationRelationsController extends ElementRelationsBaseControlle
      */
     public function operationEntity(Request $request, Response $response, array $args): Response
     {
-        // @TODO
+        return $this->operationRelatedElements(
+            $request,
+            $response,
+            $args,
+            EntityQueryController::getEntityClassName()
+        );
     }
 
     /**

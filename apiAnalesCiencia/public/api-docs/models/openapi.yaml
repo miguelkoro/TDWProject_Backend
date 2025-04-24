@@ -1224,7 +1224,7 @@ paths:
   '/associations/{associationId}/{elementType}':
     parameters:
       - $ref: '#/components/parameters/associationId'
-      - $ref: '#/components/parameters/elementassociationRelParam'
+      - $ref: '#/components/parameters/elementAssociationRelParam'
     get:
       tags:
         - '🔥 Associations'
