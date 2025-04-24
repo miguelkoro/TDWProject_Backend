@@ -31,6 +31,13 @@ class Entity extends Element
     #[ORM\OrderBy([ "id" => "ASC" ])]
     protected Collection $products;
 
+    /* Collection of associations the entity is involved in */
+    #[ORM\ManyToMany(targetEntity: Association::class, inversedBy: "entities")]
+    #[ORM\JoinTable(name: "entity_participates_association")]
+    #[ORM\JoinColumn(name: "entity_id", referencedColumnName: "id")]
+    #[ORM\InverseJoinColumn(name: "association_id", referencedColumnName: "id")]
+    protected Collection $associations;
+
     /**
      * Entity constructor.
      *
