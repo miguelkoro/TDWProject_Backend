@@ -1789,6 +1789,34 @@ components:
       schema:
         type: string
         pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    ##person
+    personName:
+      name: personname
+      in: path
+      description: Person name
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    ##entity
+    entityName:
+      name: entityname
+      in: path
+      description: Entity name
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    ##association
+    associationName:
+      name: associationname
+      in: path
+      description: Association name
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]+$'
+    #
     orderParam:
       name: order
       in: query
@@ -1847,6 +1875,50 @@ components:
         enum:
           - entities
           - persons
+    ## Person
+    elementPersonRelParam:
+      name: elementType
+      in: path
+      description: |-
+        Sets the type of item related to the Person:
+        <li><b>entities</b>: Entities type element
+        <li><b>products</b>: Products type element
+
+      required: true
+      schema:
+        type: string
+        enum:
+          - entities
+          - products
+    ## Association
+    elementAssociationRelParam:
+      name: elementType
+      in: path
+      description: |-
+        Sets the type of item related to the Association:
+        <li><b>entities</b>: Entities type element
+
+      required: true
+      schema:
+        type: string
+        enum:
+          - entities
+    ## entity
+    elementEntityRelParam:
+      name: elementType
+      in: path
+      description: |-
+        Sets the type of item related to the Entity:
+        <li><b>products</b>: Products type element
+        <li><b>persons</b>: Persons type element
+
+      required: true
+      schema:
+        type: string
+        enum:
+          - products
+          - persons
+    #
 
   headers:
     ETag:
@@ -1903,5 +1975,6 @@ components:
         password:
           tokenUrl: /access_token
           scopes:
-            reader: 'Permissions: (read, update) [ User, Person, Entity, Product ]'
-            writer: 'can also: (create, update, delete) [ User, Person, Entity, Product ]'
+            reader: 'Permissions: (read, update) [ User, Person, Entity, Product, Association ]'
+            writer: 'can also: (create, update, delete) [ User, Person, Entity, Product, Association ]'
+          ##añadido association aqui abajo

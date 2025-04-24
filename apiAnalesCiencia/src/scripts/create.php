@@ -8,7 +8,7 @@
  */
 
 use TDW\ACiencia\Entity\Element;
-use TDW\ACiencia\Factory\{ EntityFactory, PersonFactory, ProductFactory };
+use TDW\ACiencia\Factory\{ EntityFactory, PersonFactory, ProductFactory, AssociationFactory };
 use TDW\ACiencia\Utility\DoctrineConnector;
 
 require __DIR__ . '/inicio.php';
@@ -17,7 +17,7 @@ if (3 !== $argc) {
     $fich = basename(__FILE__);
     echo <<< MARCA_FIN
 
-Usage: $fich [product | entity | person] <name>
+Usage: $fich [product | entity | person | association] <name>
  
 MARCA_FIN;
     exit(0);
@@ -33,7 +33,8 @@ try {
         'product' => ProductFactory::class,
         'entity' => EntityFactory::class,
         'person' => PersonFactory::class,
-        default => throw new ErrorException('Second parameter Element must be [product | entity | person]'),
+        'association' => AssociationFactory::class,
+        default => throw new ErrorException('Second parameter Element must be [product | entity | person | association]'),
     };
 
     $entityManager = DoctrineConnector::getEntityManager();

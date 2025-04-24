@@ -8,7 +8,7 @@
  */
 
 use Doctrine\ORM\EntityManager;
-use TDW\ACiencia\Entity\{ Element, Entity, Person, Product };
+use TDW\ACiencia\Entity\{ Element, Entity, Person, Product, Association };
 use TDW\ACiencia\Utility\DoctrineConnector;
 
 require __DIR__ . '/inicio.php';
@@ -16,8 +16,8 @@ require __DIR__ . '/inicio.php';
 if ($argc !== 3) {
     $texto = <<< ______USO
 
-    *> Usage: {$argv[0]} [product | entity | person] <entityId>
-    Deletes the element of type [product | entity | person] specified by <entityId>
+    *> Usage: {$argv[0]} [product | entity | person | association] <entityId>
+    Deletes the element of type [product | entity | person | association] specified by <entityId>
 
 ______USO;
     die($texto);
@@ -30,7 +30,8 @@ try {
         'product' => Product::class,
         'entity' => Entity::class,
         'person' => Person::class,
-        default => throw new ErrorException('Second parameter Element must be [product | entity | person]'),
+        'association' => Association::class,
+        default => throw new ErrorException('Second parameter Element must be [product | entity | person | association]'),
     };
 
     /** @var EntityManager $entityManager */

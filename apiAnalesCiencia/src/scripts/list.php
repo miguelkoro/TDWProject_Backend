@@ -8,7 +8,7 @@
  */
 
 use Doctrine\ORM\EntityManager;
-use TDW\ACiencia\Entity\{ Entity, Person, Product };
+use TDW\ACiencia\Entity\{ Entity, Person, Product, Association };
 use TDW\ACiencia\Utility\DoctrineConnector;
 
 require __DIR__ . '/inicio.php';
@@ -16,8 +16,8 @@ require __DIR__ . '/inicio.php';
 if ($argc < 2) {
     $texto = <<< ____USO
 
-    *> Usage: {$argv[0]} (product | entity | person) [--json]
-    Lists the elements of type [product | entity | person] specified
+    *> Usage: {$argv[0]} (product | entity | person | association) [--json]
+    Lists the elements of type [product | entity | person | association] specified
 
 ____USO;
     die($texto);
@@ -30,7 +30,8 @@ try {
         'product' => Product::class,
         'entity' => Entity::class,
         'person' => Person::class,
-        default => throw new ErrorException('Second parameter Element must be [product | entity | person]'),
+        'association' => Association::class,
+        default => throw new ErrorException('Second parameter Element must be [product | entity | person | association]'),
     };
 
     /** @var EntityManager $entityManager */
