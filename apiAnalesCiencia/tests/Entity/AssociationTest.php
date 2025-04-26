@@ -114,15 +114,15 @@ class AssociationTest extends TestCase
         );
     }
 
+    //Tener en cuenta cuando es clave primaria o foranea
     public function testGetAddContainsRemoveEntities(): void
     {
         self::assertEmpty(self::$association->getEntities());
         $slug = self::$faker->slug();
         self::assertNotEmpty($slug);
         $entity = Factory\EntityFactory::createElement($slug);
-        self::$association->addEntity($entity);
-        self::$association->addEntity($entity); // CCoverage
 
+        self::$association->addEntity($entity);
         self::assertNotEmpty(self::$association->getEntities());
         self::assertTrue(self::$association->containsEntity($entity));
 
