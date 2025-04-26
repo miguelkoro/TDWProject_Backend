@@ -212,9 +212,7 @@ class Entity extends Element
      */
     public function removeAssociation(Association $association): bool
     {
-        $result = $this->associations->removeElement($association);
-        $association->removeEntity($this);
-        return $result;
+        return $this->associations->removeElement($association);
     }
 
     /**

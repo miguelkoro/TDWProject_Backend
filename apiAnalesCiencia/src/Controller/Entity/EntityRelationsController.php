@@ -61,22 +61,7 @@ final class EntityRelationsController extends ElementRelationsBaseController
         
         $persons = $entity?->getPersons()->getValues() ?? [];
 
-        return $this->getElements($request, $response, $entity, PersonQueryController::getEntitiesTag(), $persons);
-
-        //Product --> persons
-        /*$productId = $args[ProductQueryController::getEntityIdName()] ?? 0;
-        if ($productId <= 0 || $productId > 2147483647) {   // 404
-            return $this->getElements($request, $response, null, PersonQueryController::getEntitiesTag(), []);
-        }
-        /** @var Product|null $product */
-        /*$product = $this->entityManager
-            ->getRepository(ProductQueryController::getEntityClassName())
-            ->find($productId);
-
-        $persons = $product?->getPersons()->getValues() ?? [];
-
-        return $this->getElements($request, $response, $product, PersonQueryController::getEntitiesTag(), $persons);*/
-       
+        return $this->getElements($request, $response, $entity, PersonQueryController::getEntitiesTag(), $persons);      
 
     }
 
@@ -116,7 +101,7 @@ final class EntityRelationsController extends ElementRelationsBaseController
         //Entity --> products
         $entityId = $args[EntityQueryController::getEntityIdName()] ?? 0;
         if ($entityId <= 0 || $entityId > 2147483647) {   // 404
-            return $this->getElements($request, $response, null, PersonQueryController::getEntitiesTag(), []);
+            return $this->getElements($request, $response, null, ProductQueryController::getEntitiesTag(), []);
         }
         /** @var Entity|null $entity */
         $entity = $this->entityManager
@@ -125,7 +110,7 @@ final class EntityRelationsController extends ElementRelationsBaseController
         
         $products = $entity?->getProducts()->getValues() ?? [];
 
-        return $this->getElements($request, $response, $entity, PersonQueryController::getEntitiesTag(), $products);
+        return $this->getElements($request, $response, $entity, ProductQueryController::getEntitiesTag(), $products);
 
     }
 
