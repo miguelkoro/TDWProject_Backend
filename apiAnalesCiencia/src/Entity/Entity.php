@@ -196,11 +196,11 @@ class Entity extends Element
      */
     public function addAssociation(Association $association): void
     {
-        if ($this->containsAssociation($association)) {
-            return;
+        if (!$this->containsAssociation($association)) {
+            $this->associations->add($association);
         }
 
-        $this->associations->add($association);
+        
     }
 
     /**
@@ -213,6 +213,7 @@ class Entity extends Element
     public function removeAssociation(Association $association): bool
     {
         return $this->associations->removeElement($association);
+        //return $this->persons->removeElement($person);
     }
 
     /**
