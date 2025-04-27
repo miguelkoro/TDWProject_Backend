@@ -14,8 +14,8 @@ use JsonException;
 use PHPUnit\Framework\Attributes as TestsAttr;
 use TDW\ACiencia\Controller\Element\ElementRelationsBaseController;
 use TDW\ACiencia\Controller\Entity\{ EntityQueryController, EntityRelationsController };
-use TDW\ACiencia\Entity\{ Entity, Person, Product };
-use TDW\ACiencia\Factory\{ EntityFactory, PersonFactory, ProductFactory };
+use TDW\ACiencia\Entity\{ Entity, Person, Product, Association };
+use TDW\ACiencia\Factory\{ EntityFactory, PersonFactory, ProductFactory, AssociationFactory };
 use TDW\ACiencia\Utility\{ DoctrineConnector, Utils };
 use TDW\Test\ACiencia\Controller\BaseTestCase;
 
@@ -40,6 +40,7 @@ final class EntityRelationsControllerTest extends BaseTestCase
     private static Entity $entity;
     private static Person $person;
     private static Product $product;
+    private static Association $association;
 
     /**
      * Se ejecuta una vez al inicio de las pruebas de la clase UserControllerTest
@@ -88,10 +89,15 @@ final class EntityRelationsControllerTest extends BaseTestCase
         self::assertNotEmpty($productName);
         self::$product  = ProductFactory::createElement($productName);
 
+        $associationName = substr(self::$faker->name(), 0, 80); #associacion
+        self::assertNotEmpty($associationName);
+        self::$association  = AssociationFactory::createElement($associationName);
+
         self::$entityManager = DoctrineConnector::getEntityManager();
         self::$entityManager->persist(self::$entity);
         self::$entityManager->persist(self::$person);
         self::$entityManager->persist(self::$product);
+        self::$entityManager->persist(self::$association); # Association
         self::$entityManager->flush();
     }
 
@@ -309,6 +315,99 @@ final class EntityRelationsControllerTest extends BaseTestCase
         self::assertEmpty($responseProducts['products']);
     }
 
+    // *******************
+    // Entity -> Associations
+    // *******************
+    /**
+     * OPTIONS /entities/{entityId}/associations
+     * OPTIONS /entities/{entityId}/associations/add/{stuffId}
+     */
+    /*public function testOptionsRelationship204(): void
+    {
+        $response = $this->runApp(
+            'OPTIONS',
+            self::RUTA_API . '/' . self::$entity->getId() . '/associations'
+        );
+        self::assertSame(204, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeader('Allow'));
+        self::assertEmpty($response->getBody()->getContents());
+
+        $response = $this->runApp(
+            'OPTIONS',
+            self::RUTA_API . '/' . self::$entity->getId()
+            . '/associations/add/' . self::$association->getId()
+        );
+        self::assertSame(204, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeader('Allow'));
+        self::assertEmpty($response->getBody()->getContents());
+    }*/
+
+    /**
+     * PUT /entities/{entityId}/associations/add/{stuffId}
+     */
+    public function testAddAssociation209(): void
+    {
+        self::$writer['authHeader'] = $this->getTokenHeaders(self::$writer['username'], self::$writer['password']);
+        $response = $this->runApp(
+            'PUT',
+            self::RUTA_API . '/' . self::$entity->getId()
+                . '/associations/add/' . self::$association->getId(),
+            null,
+            self::$writer['authHeader']
+        );
+        self::assertSame(209, $response->getStatusCode());
+        self::assertJson($response->getBody()->getContents());
+    }
+
+    /**
+     * GET /entities/{entityId}/associations 200 Ok
+     *
+     * @throws JsonException
+     */
+    #[TestsAttr\Depends('testAddAssociation209')]
+    public function testGetAssociations200OkWithElements(): void
+    {
+        self::$reader['authHeader'] = $this->getTokenHeaders(self::$reader['username'], self::$reader['password']);
+        $response = $this->runApp(
+            'GET',
+            self::RUTA_API . '/' . self::$entity->getId() . '/associations',
+            null,
+            self::$reader['authHeader']
+        );
+        self::assertSame(200, $response->getStatusCode());
+        $r_body = $response->getBody()->getContents();
+        self::assertJson($r_body);
+        $responseAssociations = json_decode($r_body, true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('associations', $responseAssociations);
+        self::assertSame(
+            self::$association->getName(),
+            $responseAssociations['associations'][0]['association']['name']
+        );
+    }
+
+    /**
+     * PUT /entities/{entityId}/associations/rem/{stuffId}
+     *
+     * @throws JsonException
+     */
+    #[TestsAttr\Depends('testGetAssociations200OkWithElements')]
+    public function testRemoveAssociation209(): void
+    {
+        $response = $this->runApp(
+            'PUT',
+            self::RUTA_API . '/' . self::$entity->getId()
+            . '/associations/rem/' . self::$association->getId(),
+            null,
+            self::$writer['authHeader']
+        );
+        self::assertSame(209, $response->getStatusCode());
+        $r_body = $response->getBody()->getContents();
+        self::assertJson($r_body);
+        $responseEntity = json_decode($r_body, true, 512, JSON_THROW_ON_ERROR);
+        self::assertArrayHasKey('associations', $responseEntity['entity']);
+        self::assertEmpty($responseEntity['entity']['associations']);
+    }
+
     /**
      * @param string $method
      * @param string $uri
@@ -354,12 +453,17 @@ final class EntityRelationsControllerTest extends BaseTestCase
             // 'getProducts401'      => [ 'GET', self::RUTA_API . '/1/products',        401],
             'putAddProduct401'    => [ 'PUT', self::RUTA_API . '/1/products/add/1',  401],
             'putRemoveProduct401' => [ 'PUT', self::RUTA_API . '/1/products/rem/1',  401],
+            // 'getAssociations401'       => [ 'GET', self::RUTA_API . '/1/persons',       401],
+            'putAddAssociation401'     => [ 'PUT', self::RUTA_API . '/1/associations/add/1', 401],
+            'putRemoveAssociation401'  => [ 'PUT', self::RUTA_API . '/1/associations/rem/1', 401],
 
             // 403
             'putAddPerson403'     => [ 'PUT', self::RUTA_API . '/1/persons/add/1', 403, 'reader'],
             'putRemovePerson403'  => [ 'PUT', self::RUTA_API . '/1/persons/rem/1', 403, 'reader'],
             'putAddProduct403'    => [ 'PUT', self::RUTA_API . '/1/products/add/1',  403, 'reader'],
             'putRemoveProduct403' => [ 'PUT', self::RUTA_API . '/1/products/rem/1',  403, 'reader'],
+            'putAddAssociation403'     => [ 'PUT', self::RUTA_API . '/1/associations/add/1', 403, 'reader'],
+            'putRemoveAssociation403'  => [ 'PUT', self::RUTA_API . '/1/associations/rem/1', 403, 'reader'],
 
             // 404
             'getPersons404'       => [ 'GET', self::RUTA_API . '/0/persons',       404, 'admin'],
@@ -368,12 +472,17 @@ final class EntityRelationsControllerTest extends BaseTestCase
             'getProducts404'      => [ 'GET', self::RUTA_API . '/0/products',        404, 'admin'],
             'putAddProduct404'    => [ 'PUT', self::RUTA_API . '/0/products/add/1',  404, 'admin'],
             'putRemoveProduct404' => [ 'PUT', self::RUTA_API . '/0/products/rem/1',  404, 'admin'],
+            'getAssociations404'       => [ 'GET', self::RUTA_API . '/0/associations',       404, 'admin'],
+            'putAddAssociation404'     => [ 'PUT', self::RUTA_API . '/0/associations/add/1', 404, 'admin'],
+            'putRemoveAssociation404'  => [ 'PUT', self::RUTA_API . '/0/associations/rem/1', 404, 'admin'],
 
             // 406
             'putAddPerson406'     => [ 'PUT', self::RUTA_API . '/1/persons/add/100', 406, 'admin'],
             'putRemovePerson406'  => [ 'PUT', self::RUTA_API . '/1/persons/rem/100', 406, 'admin'],
             'putAddProduct406'    => [ 'PUT', self::RUTA_API . '/1/products/add/100',  406, 'admin'],
             'putRemoveProduct406' => [ 'PUT', self::RUTA_API . '/1/products/rem/100',  406, 'admin'],
+            'putAddAssociation406'     => [ 'PUT', self::RUTA_API . '/1/associations/add/100', 406, 'admin'],
+            'putRemoveAssociation406'  => [ 'PUT', self::RUTA_API . '/1/associations/rem/100', 406, 'admin'],
         ];
     }
 }

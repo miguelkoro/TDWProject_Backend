@@ -24,6 +24,7 @@ use function PHPUnit\Framework\assertNotEmpty;
 #[TestsAttr\CoversClass(Factory\EntityFactory::class)]
 #[TestsAttr\UsesClass(Factory\PersonFactory::class)]
 #[TestsAttr\UsesClass(Factory\ProductFactory::class)]
+#[TestsAttr\UsesClass(Factory\AssociationFactory::class)]
 class EntityTest extends TestCase
 {
     protected static Entity $entity;
@@ -57,6 +58,7 @@ class EntityTest extends TestCase
         );
         self::assertEmpty(self::$entity->getProducts());
         self::assertEmpty(self::$entity->getPersons());
+        self::assertEmpty(self::$entity->getAssociations());
     }
 
     public function testGetId(): void
@@ -131,6 +133,24 @@ class EntityTest extends TestCase
         self::assertFalse(self::$entity->containsPerson($person));
         self::assertCount(0, self::$entity->getPersons());
         self::assertFalse(self::$entity->removePerson($person));
+    }
+
+    public function testGetAddContainsRemoveAssociations(): void
+    {
+        self::assertEmpty(self::$entity->getAssociations());
+        $slug = self::$faker->slug();
+        self::assertNotEmpty($slug);
+        $association = Factory\AssociationFactory::createElement($slug);
+
+        self::$entity->addAssociation($association);
+        self::$entity->addAssociation($association);  // CC
+        self::assertNotEmpty(self::$entity->getAssociations());
+        self::assertTrue(self::$entity->containsAssociation($association));
+
+        self::$entity->removeAssociation($association);
+        self::assertFalse(self::$entity->containsAssociation($association));
+        self::assertCount(0, self::$entity->getAssociations());
+        self::assertFalse(self::$entity->removeAssociation($association));
     }
 
     public function testGetAddContainsRemoveProducts(): void
