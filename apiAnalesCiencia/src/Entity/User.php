@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 
 namespace TDW\ACiencia\Entity;
-
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
@@ -67,6 +67,13 @@ class User implements JsonSerializable, Stringable
     )]
     protected Role $role;
 
+    #[ORM\Column(
+        name: "birth_date",
+        type: "datetime",
+        nullable: true
+    )]
+    protected DateTime | null $birthDate = null;
+
     /**
      * User constructor.
      *
@@ -81,13 +88,15 @@ class User implements JsonSerializable, Stringable
         string $username = '<empty>',
         string $email = '',
         string $password = '',
-        Role|string $role = Role::READER
+        Role|string $role = Role::READER,
+        DateTime $birthDate = null
     ) {
         $this->id       = 0;
         $this->username = $username;
         $this->email    = $email;
         $this->setPassword($password);
-        $this->setRole($role);
+        $this->setRole($role);        
+        $this->birthDate = $birthDate;
     }
 
     /**
@@ -228,6 +237,28 @@ class User implements JsonSerializable, Stringable
         return $roles;
     }
 
+    /**
+     * Gets the element's bithday
+     *
+     * @return ?DateTime
+     */
+    final public function getBirthDate(): ?DateTime
+    {
+        return $this->birthDate;
+    }
+
+    /**
+     * Sets the element's bithday
+     *
+     * @param DateTime|null $birthDate
+     * @return void
+     */
+    final public function setBirthDate(?DateTime $birthDate): void
+    {
+        $this->birthDate = $birthDate;
+    }
+
+
     public function __toString(): string
     {
         $reflection = new ReflectionObject($this);
@@ -239,6 +270,7 @@ class User implements JsonSerializable, Stringable
                 $this->getUsername(),
                 $this->getEmail(),
                 $this->role->name,
+                $this->getBirthDate()?->format('Y-m-d')
             );
     }
 
@@ -255,6 +287,7 @@ class User implements JsonSerializable, Stringable
                 'username' => $this->getUsername(),
                 'email' => $this->getEmail(),
                 'role' => $this->role->name,
+                'birthDate' => $this->getBirthDate()?->format('Y-m-d'),
             ]
         ];
     }

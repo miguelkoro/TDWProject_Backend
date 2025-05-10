@@ -8,7 +8,7 @@
  */
 
 namespace TDW\ACiencia\Controller\User;
-
+use DateTime;
 use Doctrine\ORM;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -103,6 +103,25 @@ class UpdateCommand
             }
             $userToModify->setEmail($req_data['email']);
         }
+
+        // Check BirthDate
+        if (isset($req_data['birthDate'])) {
+            /*$birthDate = \DateTime::createFromFormat('!Y-m-d', $req_data['birthDate']);
+            if (!$birthDate) {
+                // Fecha inválida
+                $this->entityManager->rollback();
+                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+            }
+            $userToModify->setBirthDate($birthDate);*/
+            try{
+                $birthDate = new DateTime($req_data['birthDate']);
+                $userToModify->setBirthDate($birthDate);
+            } catch (Throwable) {    // 400 BAD_REQUEST: unexpected date format
+                $this->entityManager->rollback();
+                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+            }
+        }
+
         $this->updatePassword($req_data, $userToModify);
 
         // Update role

@@ -8,7 +8,7 @@
  */
 
 namespace TDW\ACiencia\Controller\User;
-
+use DateTime;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
@@ -44,7 +44,7 @@ class CreateCommand
         /** @var array<string,string> $req_data */
         $req_data = $request->getParsedBody() ?? [];
 
-        if (!isset($req_data['username'], $req_data['email'], $req_data['password'])) { // 422 - Faltan datos
+        if (!isset($req_data['username'], $req_data['email'], $req_data['password'], $req_data['birthDate'])) { // 422 - Faltan datos
             return Error::createResponse($response, StatusCode::STATUS_UNPROCESSABLE_ENTITY);
         }
 
@@ -59,13 +59,24 @@ class CreateCommand
             return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
         }
 
+        //Check BirthDate
+        $birthDate = null;
+        if (!empty($req_data['birthDate'])) {
+            $birthDate = \DateTime::createFromFormat('!Y-m-d', $req_data['birthDate']);
+            if (!$birthDate) {
+                // Fecha inválida
+                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+            }
+        }
+
         // 201
         try {
             $user = new User(
                 $req_data['username'],
                 $req_data['email'],
                 $req_data['password'],
-                Role::INACTIVE
+                Role::INACTIVE,
+                $birthDate
             );
         } catch (Throwable) {    // 400 BAD REQUEST: Unexpected role
             return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
