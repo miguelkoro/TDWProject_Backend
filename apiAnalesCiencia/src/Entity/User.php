@@ -74,6 +74,14 @@ class User implements JsonSerializable, Stringable
     )]
     protected DateTime | null $birthDate = null;
 
+    #[ORM\Column(
+        name: "name",
+        type: "string",
+        length: 60,
+        nullable: true
+    )]
+    protected string | null $name = null;
+
     /**
      * User constructor.
      *
@@ -89,7 +97,8 @@ class User implements JsonSerializable, Stringable
         string $email = '',
         string $password = '',
         Role|string $role = Role::READER,
-        DateTime $birthDate = null
+        DateTime $birthDate = null,
+        string $name = null
     ) {
         $this->id       = 0;
         $this->username = $username;
@@ -97,6 +106,7 @@ class User implements JsonSerializable, Stringable
         $this->setPassword($password);
         $this->setRole($role);        
         $this->birthDate = $birthDate;
+        $this->name     = $name;
     }
 
     /**
@@ -258,19 +268,41 @@ class User implements JsonSerializable, Stringable
         $this->birthDate = $birthDate;
     }
 
+    /**
+     * Get user name
+     *
+     * @return string
+     */
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set user name
+     *
+     * @param string $name name
+     * @return void
+     */
+    public function setName(?string $name): void
+    {
+        $this->name = $name;
+    }
+
 
     public function __toString(): string
     {
         $reflection = new ReflectionObject($this);
         return
             sprintf(
-                '[%s: (id=%04d, username="%s", email="%s", role="%s")]',
+                '[%s: (id=%04d, username="%s", email="%s", role="%s", birthDate="%s", name="%s")]',
                 $reflection->getShortName(),
                 $this->getId(),
                 $this->getUsername(),
                 $this->getEmail(),
                 $this->role->name,
-                $this->getBirthDate()?->format('Y-m-d')
+                $this->getBirthDate()?->format('Y-m-d'),
+                $this->getName()
             );
     }
 
@@ -288,6 +320,7 @@ class User implements JsonSerializable, Stringable
                 'email' => $this->getEmail(),
                 'role' => $this->role->name,
                 'birthDate' => $this->getBirthDate()?->format('Y-m-d'),
+                'name' => $this->getName()
             ]
         ];
     }

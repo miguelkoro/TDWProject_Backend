@@ -106,17 +106,20 @@ class UpdateCommand
 
         // Check BirthDate
         if (isset($req_data['birthDate'])) {
-            /*$birthDate = \DateTime::createFromFormat('!Y-m-d', $req_data['birthDate']);
-            if (!$birthDate) {
-                // Fecha inválida
-                $this->entityManager->rollback();
-                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
-            }
-            $userToModify->setBirthDate($birthDate);*/
             try{
                 $birthDate = new DateTime($req_data['birthDate']);
                 $userToModify->setBirthDate($birthDate);
             } catch (Throwable) {    // 400 BAD_REQUEST: unexpected date format
+                $this->entityManager->rollback();
+                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+            }
+        }
+
+        //Check name
+        if (isset($req_data['name'])) {
+            try{
+                $userToModify->setName($req_data['name']);
+            }catch (Throwable) {    // 400 BAD_REQUEST: unexpected date format
                 $this->entityManager->rollback();
                 return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
             }

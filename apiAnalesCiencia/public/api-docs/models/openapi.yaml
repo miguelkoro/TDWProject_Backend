@@ -1335,6 +1335,9 @@ components:
           description: An RFC3339 formatted date string ("2025-01-01")
           type: string
           format: date
+        name:
+          description: User name
+          type: string
         # _links:
         #   description: link relations
         #   type: object
@@ -1358,6 +1361,7 @@ components:
             email: miw.etsisi@upm.es
             role: INACTIVE
             birthDate: '2020-01-01'
+            name: Miguel
             # _links:
             #   parent:
             #     href: /api/v1/users
@@ -1372,6 +1376,7 @@ components:
             email: miw.etsisi@upm.es
             role: INACTIVE
             birthDate: '2020-01-01'
+            name: Miguel
             # _links:
             #   parent:
             #     href: /api/v1/users
@@ -1613,12 +1618,16 @@ components:
                 description: User birth date
                 type: string
                 format: date
-            required: [ 'username', 'email', 'password', 'birthDate' ]
+              name:
+                description: User name
+                type: string
+            required: [ 'username', 'email', 'password', 'birthDate', 'name' ]
             examples:
                 - username: username
                   email: User_email@example.com
                   password: User_password
                   birthDate: '2020-01-01'
+                  name: User_name
     UpdateUserRequestBody:
       description: User data that you want to modify
       required: true
@@ -1649,12 +1658,16 @@ components:
                 description: new User birth date
                 type: string
                 format: date
+              name:
+                description: new User name
+                type: string
             examples:
               - username: miw.etsisi
                 email: miw.etsisi@upm.es
                 password: MiW_User_password
                 role: READER
                 birthDate: '2020-01-01'
+                name: miguel
     LoginRequestBody:
       description: Registered **username** and **password**
       required: true

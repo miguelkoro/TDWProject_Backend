@@ -44,7 +44,7 @@ class CreateCommand
         /** @var array<string,string> $req_data */
         $req_data = $request->getParsedBody() ?? [];
 
-        if (!isset($req_data['username'], $req_data['email'], $req_data['password'], $req_data['birthDate'])) { // 422 - Faltan datos
+        if (!isset($req_data['username'], $req_data['email'], $req_data['password'], $req_data['birthDate'], $req_data['name'])) { // 422 - Faltan datos
             return Error::createResponse($response, StatusCode::STATUS_UNPROCESSABLE_ENTITY);
         }
 
@@ -76,7 +76,8 @@ class CreateCommand
                 $req_data['email'],
                 $req_data['password'],
                 Role::INACTIVE,
-                $birthDate
+                $birthDate,
+                $req_data['name']
             );
         } catch (Throwable) {    // 400 BAD REQUEST: Unexpected role
             return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
