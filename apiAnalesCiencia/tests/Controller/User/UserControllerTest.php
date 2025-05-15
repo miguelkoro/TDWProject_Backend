@@ -103,6 +103,8 @@ class UserControllerTest extends BaseTestCase
             'username'  => self::$faker->userName(),
             'email'     => self::$faker->email(),
             'password'  => self::$faker->password(),
+            'birthDate' => self::$faker->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
+            'name'     => self::$faker->name(),
         ];
         self::$writer['authHeader'] = $this->getTokenHeaders(self::$writer['username'], self::$writer['password']);
 
@@ -123,6 +125,8 @@ class UserControllerTest extends BaseTestCase
         self::assertSame($p_data['username'], $newUserData['username']);
         self::assertSame($p_data['email'], $newUserData['email']);
         self::assertEquals(Role::INACTIVE->name, $newUserData['role']);
+        self::assertEquals($p_data['birthDate'], $newUserData['birthDate']);
+        self::assertEquals($p_data['name'], $newUserData['name']);
 
         return $newUserData;
     }
@@ -133,15 +137,20 @@ class UserControllerTest extends BaseTestCase
      * @param string|null $username
      * @param string|null $email
      * @param string|null $password
+     * @param string|null $birthDate
+     * @param string|null $name
+     * @
      */
     #[TestsAttr\Depends('testPostUser201Created')]
     #[TestsAttr\DataProvider('dataProviderPostUser422')]
-    public function testPostUser422UnprocessableEntity(?string $username, ?string $email, ?string $password): void
+    public function testPostUser422UnprocessableEntity(?string $username, ?string $email, ?string $password, ?string $birthDate, ?string $name): void
     {
         $p_data = [
             'username' => $username,
             'email'    => $email,
             'password' => $password,
+            'birthDate' => $birthDate,
+            'name'     => $name,
         ];
         $response = $this->runApp(
             'POST',
@@ -165,7 +174,9 @@ class UserControllerTest extends BaseTestCase
         $p_data = [
             'username' => $user['username'],
             'email'    => self::$faker->email(),
-            'password' => self::$faker->password()
+            'password' => self::$faker->password(),
+            'birthDate' => self::$faker->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
+            'name'     => self::$faker->name(),
         ];
         $response = $this->runApp(
             'POST',
@@ -179,7 +190,9 @@ class UserControllerTest extends BaseTestCase
         $p_data = [
             'username' => self::$faker->userName(),
             'email'    => $user['email'],
-            'password' => self::$faker->password()
+            'password' => self::$faker->password(),
+            'birthDate' => self::$faker->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
+            'name'     => self::$faker->name(),
         ];
         $response = $this->runApp(
             'POST',
@@ -344,6 +357,8 @@ class UserControllerTest extends BaseTestCase
             'username'  => self::$faker->userName(),
             'email'     => self::$faker->email(),
             'password'  => self::$faker->password(),
+            'birthDate' => self::$faker->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
+            'name'     => self::$faker->name(),
             'role'      => (0 === self::$faker->numberBetween() % 2)
                 ? Role::READER->name
                 : Role::WRITER->name
@@ -367,6 +382,8 @@ class UserControllerTest extends BaseTestCase
         self::assertSame($p_data['username'], $user_aux['user']['username']);
         self::assertSame($p_data['email'], $user_aux['user']['email']);
         self::assertEquals($p_data['role'], $user_aux['user']['role']);
+        self::assertEquals($p_data['birthDate'], $user_aux['user']['birthDate']);
+        self::assertEquals($p_data['name'], $user_aux['user']['name']);
 
         return $user_aux['user'];
     }
@@ -384,6 +401,9 @@ class UserControllerTest extends BaseTestCase
                 ['username' => self::$reader['username']],   // username already exists
                 ['email' => self::$reader['email']],         // e-mail already exists
                 ['role' => self::$faker->word()],            // unexpected role
+                //Estos pruebo con campos no validos, una no fecha y un array
+                ['birthDate' => 'fecha-invalida'], // unexpected birthDate
+                ['name' => ['array']],           // unexpected name
             ];
         self::$writer['authHeader'] = $this->getTokenHeaders(self::$writer['username'], self::$writer['password']);
         $r1 = $this->runApp( // Obtains etag header
@@ -541,8 +561,11 @@ class UserControllerTest extends BaseTestCase
         'no_username' => "array[string]",
         'no_email' => "array[string]",
         'no_passwd' => "array[string]",
+        'no_birthDate' => "array[string]",
+        'no_name' => "array[string]",
         'no_us_pa' => "array[string]",
         'no_em_pa' => "array[string]",
+        'no_us_em' => "array[string]",
         ])]
     public static function dataProviderPostUser422(): iterable
     {
@@ -550,13 +573,18 @@ class UserControllerTest extends BaseTestCase
         $fakeUsername = self::$faker->userName();
         $fakeEmail = self::$faker->email();
         $fakePasswd = self::$faker->password();
+        $fakeBirthDate = self::$faker->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d');
+        $fakeName = self::$faker->name();
 
-        yield 'empty_data'  => [ null,          null,       null ];
-        yield 'no_username' => [ null,          $fakeEmail, $fakePasswd ];
-        yield 'no_email'    => [ $fakeUsername, null,       $fakePasswd ];
-        yield 'no_passwd'   => [ $fakeUsername, $fakeEmail, null ];
-        yield 'no_us_pa'    => [ null,          $fakeEmail, null ];
-        yield 'no_em_pa'    => [ $fakeUsername, null,       null ];
+        yield 'empty_data'  => [ null, null, null, null, null ];
+        yield 'no_username' => [ null, $fakeEmail, $fakePasswd, $fakeBirthDate, $fakeName ];
+        yield 'no_email'    => [ $fakeUsername, null, $fakePasswd, $fakeBirthDate, $fakeName ];
+        yield 'no_passwd'   => [ $fakeUsername, $fakeEmail, null, $fakeBirthDate, $fakeName ];
+        yield 'no_birthDate'=> [ $fakeUsername, $fakeEmail, $fakePasswd, null, $fakeName ];
+        yield 'no_name'     => [ $fakeUsername, $fakeEmail, $fakePasswd, $fakeBirthDate, null ];
+        yield 'no_us_pa'    => [ null, $fakeEmail, null, $fakeBirthDate, $fakeName ];
+        yield 'no_em_pa'    => [ $fakeUsername, null, null, $fakeBirthDate, $fakeName ];
+        yield 'no_us_em'    => [ null, null, $fakePasswd, $fakeBirthDate, $fakeName ];
     }
 
     /**
